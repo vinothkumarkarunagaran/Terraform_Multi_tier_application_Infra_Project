@@ -17,19 +17,19 @@ module "ec2" {
 }
 
 module "alb" {
-  source          = "./modules/alb"
-  vpc_id          = module.vpc.vpc_id
-  public_subnets  = module.vpc.public_subnets
-  target_ids      = module.ec2.instance_ids
-  project         = var.project
+  source         = "./modules/alb"
+  vpc_id         = module.vpc.vpc_id
+  public_subnets = module.vpc.public_subnets
+  target_ids     = module.ec2.instance_ids
+  project        = var.project
 }
 
 module "rds" {
-  source       = "./modules/rds"
-  vpc_id       = module.vpc.vpc_id
-  db_subnets   = module.vpc.db_subnets
-  db_username  = var.db_username
-  db_password  = var.db_password
-  project      = var.project
+  source      = "./modules/rds"
+  vpc_id      = module.vpc.vpc_id
+  db_subnets  = module.vpc.db_subnets
+  db_username = var.db_username
+  db_password = var.db_password
+  project     = var.project
 }
 

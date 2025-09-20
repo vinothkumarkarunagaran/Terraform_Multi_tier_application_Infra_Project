@@ -56,3 +56,18 @@ terraform-multitier/
     ├── ec2/
     ├── alb/
     └── rds/
+
+
+Setup Remote Backend (S3 + DynamoDB)
+
+Before coding, create:
+
+aws s3 mb s3://my-terraform-state-bucket
+aws dynamodb create-table \
+  --table-name terraform-locks \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST
+
+
+This stores Terraform state securely.

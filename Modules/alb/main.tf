@@ -1,34 +1,36 @@
-resource "aws_lb" "this" {
-  name               = "${var.project}-alb"
-  load_balancer_type = "application"
-  subnets            = var.public_subnets
+variable "vpc_id" {}
+variable "public_subnet_ids" {
+  type = list(string)
 }
 
-resource "aws_lb_target_group" "tg" {
-  name     = "${var.project}-tg"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
+# Create Internet Gateway (if not already created)
+resource "aws_internet_gateway" "igw" {
+  vpc_id = var.vpc_id
 }
 
-resource "aws_lb_target_group_attachment" "tg_attach" {
-  count            = length(var.target_ids)
-  target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = var.target_ids[count.index]
-  port             = 80
-}
+# Create a route table for public subnets
+resource "aws_route_table" "public" {
+  vpc_id = var.vpc_id
 
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.this.arn
-  port              = 80
-  protocol          = "HTTP"
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.tg.arn
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
   }
 }
 
-output "alb_dns" {
-  value = aws_lb.this.dns_name
+# Associate public subnets with route table
+resource "aws_route_table_association" "public_assoc" {
+  for_each       = toset(var.public_subnet_ids)
+  subnet_id      = each.value
+  route_table_id = aws_route_table.public.id
+}
+
+# Create Application Load Balancer
+resource "aws_lb" "this" {
+  name               = "multitier-app-alb"
+  load_balancer_type = "application"
+  subnets            = var.public_subnet_ids
+  security_groups    = [] # Add your ALB SG IDs here
+  enable_deletion_protection = false
 }
 
